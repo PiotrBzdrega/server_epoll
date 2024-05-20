@@ -52,7 +52,8 @@ int main(int argc, char *argv[])
   int ret;
 
 #ifdef __linux__
-    int pid_file = open("/var/run/server.pid", O_CREAT | O_RDWR, 0666); //TODO:why 666?
+    /* if file doesn't exist, permission level must be determined */
+    int pid_file = open("/var/run/server.pid", O_CREAT | O_RDWR, 0666); //read and write permissions for the owner, group, and others
     ret = flock(pid_file, LOCK_EX | LOCK_NB);
     if(ret) {
         if(EWOULDBLOCK == errno)
@@ -97,9 +98,10 @@ int main(int argc, char *argv[])
     std::string porti;
     int option_index = 0;
     static struct option long_options[] = {
-            {"ip",      required_argument, 0, 'i' },
+            {"ip",      required_argument, 0,  'i' },
             {"port",    required_argument, 0,  'p' },
-            {0,         0,                 0,  0 }
+            {"ssl",     no_argument,       0,   1  },
+            {0,         0,                 0,   0  }
         };
 
     while ((ret = (getopt_long(argc,argv,"i:p:",long_options, &option_index))) != -1)
@@ -168,8 +170,8 @@ int main(int argc, char *argv[])
         handle_error("getaddrinfo",true);
     }
     
-    int fd; /* file descriptor */
-    
+    int fd; /* server file descriptor */
+    ret = -1; /* reset in case of empty list of servinfo */
     for(struct addrinfo *ptr = servinfo; ptr != nullptr;  ptr= ptr->ai_next)
     { 
         char host[256],service[256];
@@ -297,8 +299,10 @@ int main(int argc, char *argv[])
     sigset_t mask;
     sigemptyset(&mask); /* initialize set w/o members */
     sigaddset(&mask, SIGTERM); /* append signal to set */
-    sigaddset(&mask, SIGINT);
-	  sigaddset(&mask, SIGQUIT);
+    sigaddset(&mask, SIGINT); /* Control-C */
+	  sigaddset(&mask, SIGQUIT); /* Control-\ */
+    sigaddset(&mask, SIGSTOP);
+    sigaddset(&mask, SIGTSTP); /* Control-Z */
     ret = sigprocmask(SIG_BLOCK, &mask, 0); /* block signals from set */
     if(ret == -1)
     {
@@ -347,6 +351,14 @@ int main(int argc, char *argv[])
             (!(events[i].events & EPOLLIN)))
         {
           fprintf (stderr, "epoll error. events=%u\n", events[i].events);
+
+          int error = 0;
+          socklen_t errlen = sizeof(error);
+          if (getsockopt(events[i].data.fd, SOL_SOCKET, SO_ERROR, (void *)&error, &errlen) == 0)
+          {
+              printf("error = %s\n", strerror(error));
+          }
+
 	        close_fd(events[i].data.fd);
 	        continue;
         }
