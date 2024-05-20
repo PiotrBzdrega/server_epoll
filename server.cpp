@@ -17,6 +17,8 @@
 #include <string>
 #include <unordered_set> // std::unordered_set
 
+#include "Servinfo.h"
+
 constexpr int MAX_READ = 2048;
 
 volatile sig_atomic_t sig_received = 0;
@@ -30,24 +32,13 @@ auto reply = [](int n){return std::string("Received "+ std::to_string(n) + " byt
 
 auto handle_error = [](const char* msg, bool exit_proc=false)
   {
-      perror(msg); 
+    perror(msg); 
       if(exit_proc) {exit(EXIT_FAILURE);}
   };
 
-class Servinfo
-{
-private:
-    struct addrinfo *data=nullptr;
-public:
-    Servinfo(){};
-    ~Servinfo(){ freeaddrinfo(data); };
-
-    struct addrinfo** operator &() { return &data; }
-    operator struct addrinfo*() { return data; }
-};
-
 int main(int argc, char *argv[])
 {
+  bool with_tls = false;
   constexpr auto MAXEVENTS = 64;
   int ret;
 
@@ -117,7 +108,10 @@ int main(int argc, char *argv[])
             printf (" with arg %s", optarg);
           printf ("\n");
           break;
-
+        case 1:
+            printf ("option %s\n", long_options[option_index].name);
+            with_tls = true;
+            break;
         case '?':
           printf ("Unknown argument\n");
           break;
