@@ -18,7 +18,7 @@
 #include <unordered_set> // std::unordered_set
 
 #include "Servinfo.h"
-#include "EndPoint.h"
+// #include "EndPoint.h"
 
 constexpr int MAX_READ = 2048;
 
@@ -30,8 +30,19 @@ void signal_handler(int)
     sig_received = 1;
 };
 
-auto reply = [](int n){return std::string("Received "+ std::to_string(n) + " bytes.");};
+static void handle_error(const char* msg, bool exit_proc=false)
+{
+    perror(msg); 
+    if(exit_proc) {exit(EXIT_FAILURE);}
+};
 
+static int closeFd(int fileDescriptor)
+{   
+    std::fprintf(stderr,"Close fd: %u\n",fileDescriptor);
+    return close(fileDescriptor);
+};
+
+auto reply = [](int n){return std::string("Received "+ std::to_string(n) + " bytes.");};
 
 int main(int argc, char *argv[])
 {
@@ -65,6 +76,7 @@ int main(int argc, char *argv[])
             for (auto i : fd_set)
             {
                 close(i);
+                std::printf("Close fd: %d",i);
             }
             fd_set.clear();
         
@@ -75,6 +87,7 @@ int main(int argc, char *argv[])
             if (auto iter = fd_set.find(fd); iter != fd_set.end())
             {
                 close(*iter);
+                std::printf("Close fd: %d",*iter);
                 fd_set.erase(iter);
             }       
         }  
@@ -540,8 +553,6 @@ int main(int argc, char *argv[])
                            * from the set of descriptors which are monitored. */
                           close_fd(events[i].data.fd);
                         }
-
-
                 }
 
 
@@ -553,4 +564,6 @@ int main(int argc, char *argv[])
 
 
     return 0;
+}
+
 }
