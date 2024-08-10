@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
             for (auto i : fd_set)
             {
                 close(i);
-                std::printf("Close fd: %d",i);
+                std::printf("Close fd: %d\n",i);
             }
             fd_set.clear();
         
@@ -532,7 +532,7 @@ int main(int argc, char *argv[])
                             /* End of file. The remote has closed the
                             * connection. */
                             drop_connection = true;
-                            break;
+                            // break;
                         }
                         else
                         {
@@ -552,6 +552,7 @@ int main(int argc, char *argv[])
                           /* Closing the descriptor will make epoll remove it
                            * from the set of descriptors which are monitored. */
                           close_fd(events[i].data.fd);
+                          break;
                         }
                 }
 
