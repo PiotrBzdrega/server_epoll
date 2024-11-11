@@ -305,7 +305,7 @@ int main(int argc, char *argv[])
         sigemptyset(&mask); /* initialize set w/o members */
         sigaddset(&mask, SIGTERM); /* append signal to set */
         sigaddset(&mask, SIGINT); /* Control-C */
-	      sigaddset(&mask, SIGQUIT); /* Control-\ */
+	    sigaddset(&mask, SIGQUIT); /* Control-\ */
         sigaddset(&mask, SIGSTOP);
         sigaddset(&mask, SIGTSTP); /* Control-Z */
         ret = sigprocmask(SIG_BLOCK, &mask, 0); /* block signals from set */

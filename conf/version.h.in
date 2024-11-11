@@ -1,0 +1,4 @@
+// the configured options and settings for server_epoll
+#define SERVER_EPOLL_VERSION_MAJOR @server_epoll_VERSION_MAJOR@
+#define SERVER_EPOLL_VERSION_MINOR @server_epoll_VERSION_MINOR@
+#define SERVER_EPOLL_VERSION_PATCH @server_epoll_VERSION_PATCH@
